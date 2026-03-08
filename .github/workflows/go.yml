@@ -1,14 +1,16 @@
-name: Go CI
+name: Continuous Integration
 
 on:
   push:
-    branches: [ main, karolayneL-patch-2 ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
-    name: Run CI Tests
+    name: main-ci-check 
     runs-on: ubuntu-latest
     
     services:
