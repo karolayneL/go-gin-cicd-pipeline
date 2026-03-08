@@ -15,6 +15,9 @@ jobs:
         image: postgres:latest
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: alura
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -29,15 +32,33 @@ jobs:
       with:
         go-version: 1.21
 
-    - name: Wait for PostgreSQL
+    - name: Wait for PostgreSQL to be ready
       run: |
-        until docker compose exec -T postgres pg_isready -U postgres; do
-          echo 'Waiting for PostgreSQL...'
-          sleep 1
+        for i in {1..10}; do
+          if pg_isready -h localhost -U postgres; then
+            echo "PostgreSQL is ready!"
+            exit 0
+          fi
+          echo "Waiting for PostgreSQL... ($i/10)"
+          sleep 2
         done
+        echo "PostgreSQL failed to start"
+        exit 1
+
+    - name: Create database
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS alura;"
 
     - name: Lint
-      run: docker run --rm -v ${{ github.workspace }}:/app -w /app golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/app -w /app \
+          golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
 
     - name: Test
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME: alura
       run: go test -v -race -cover ./...
