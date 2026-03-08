@@ -45,9 +45,10 @@ jobs:
         echo "PostgreSQL failed to start"
         exit 1
 
-    - name: Create database
+    - name: Setup test database
       run: |
-        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS alura;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS alura;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE alura;"
 
     - name: Lint
       run: |
