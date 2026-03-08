@@ -1,6 +1,34 @@
-    - name: inicia banco
-      run: docker compose up -d postgres
-      
+name: Go CI
+
+on:
+  push:
+    branches: [ main, karolayneL-patch-2 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+
     - name: Wait for PostgreSQL
       run: |
         until docker compose exec -T postgres pg_isready -U postgres; do
@@ -8,7 +36,7 @@
           sleep 1
         done
 
-    - name: lint
+    - name: Lint
       run: docker run --rm -v ${{ github.workspace }}:/app -w /app golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
 
     - name: Test
