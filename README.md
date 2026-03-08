@@ -97,3 +97,17 @@ A `Makefile` is located in the `routes/` directory to help automate common tasks
 *   **Run CI pipeline locally:**
     ```bash
     make -f routes/Makefile ci
+
+## 📌 NOTE: About This Project
+
+**Status: Work in Progress / Study Project**
+
+This project was created for **educational purposes** during an Alura course on building APIs with Go, Gin, and implementing CI/CD pipelines.
+
+Important notes:
+- 🎯 Focused on learning and experimentation
+- ⚠️ Not recommended for production use
+- 🔄 Subject to significant changes
+- 📚 Open to suggestions and improvements
+
+Contributions are welcome, but remember: I'm still learning! 🌱
