@@ -1,32 +1,43 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: Integração Contínua
+name: Go CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, karolayneL-patch-2 ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-
-  ci:
+  build:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
+    
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
+    steps:
+    - uses: actions/checkout@v3
+    
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.22'
+        go-version: 1.21
 
-    - name: inicia banco
-      run: sudo docker compose up -d postgres
+    - name: Wait for PostgreSQL
+      run: |
+        until docker compose exec -T postgres pg_isready -U postgres; do
+          echo 'Waiting for PostgreSQL...'
+          sleep 1
+        done
 
-    - name: lint
-      run: docker run --rm -itv $(CURDIR):/app -w /app golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
-    
+    - name: Lint
+      run: docker run --rm -v ${{ github.workspace }}:/app -w /app golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
 
     - name: Test
-      run: go test -v main_test.go
+      run: go test -v -race -cover ./...
